@@ -1,0 +1,50 @@
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachineInstanceReplicaSet
+metadata:
+  name: demo-windows-replicaset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      application: windows-demo
+  template:
+    metadata:
+      name: windows-demo
+      labels:
+        application: windows-demo
+    spec:
+      domain:
+        devices:
+          interfaces:
+          - name: nic0
+            model: virtio
+            masquerade: {}
+          disks:
+          - disk:
+              bus: virtio
+            name: containerdisk
+            bootOrder: 1
+          - cdrom:
+              bus: sata
+            name: sysprep-disk
+          - cdrom:
+              bus: sata
+            name: windows-guest-tools
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 8G
+      networks:
+      - name: nic0
+        pod: {}
+      volumes:
+      - name: containerdisk
+        containerDisk:
+          image: kseremet/w2k16-container-disk:v20200826
+      - containerDisk:
+          image: registry.redhat.io/container-native-virtualization/virtio-win
+        name: windows-guest-tools
+      - configMap:
+          name: sysprep-conf
+        name: sysprep-disk
+
